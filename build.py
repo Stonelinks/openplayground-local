@@ -1,16 +1,26 @@
 import os
 import shutil
 import subprocess
+import sys
 
-os.environ['NODE_ENV'] = 'production'
 
-os.chdir('./app')
+debug = True if sys.argv[1] == "debug" else False
 
-subprocess.run(['parcel', 'build', 'src/index.html', '--no-cache', '--no-source-maps'])
+if not debug:
+    os.environ["NODE_ENV"] = "production"
 
-os.chdir('..')
+os.chdir("./app")
 
-if os.path.exists('./server/static'):
-    shutil.rmtree('./server/static')
+if debug:
+    subprocess.run(["parcel", "build", "--no-optimize", "src/index.html"])
+else:
+    subprocess.run(
+        ["parcel", "build", "src/index.html", "--no-cache", "--no-source-maps"]
+    )
 
-shutil.copytree('./app/dist', './server/static')
+os.chdir("..")
+
+if os.path.exists("./server/static"):
+    shutil.rmtree("./server/static")
+
+shutil.copytree("./app/dist", "./server/static")
