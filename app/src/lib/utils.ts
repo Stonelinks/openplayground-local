@@ -38,13 +38,13 @@ export function handleSelectModel(modelState, modelsStateContext, setModelsState
 }
 
 export const MODEL_PROVIDERS = {
-  forefront: "Forefront",
+  // forefront: "Forefront",
   "llama-local": "Llama (Local)",
-  "huggingface-local": "Hugging Face (Local)",
-  huggingface: "Hugging Face",
-  "aleph-alpha": "Aleph Alpha",
-  anthropic: "Anthropic",
-  cohere: "co:here",
-  openai: "OpenAI",
+  // "huggingface-local": "Hugging Face (Local)",
+  // huggingface: "Hugging Face",
+  // "aleph-alpha": "Aleph Alpha",
+  // anthropic: "Anthropic",
+  // cohere: "co:here",
+  // openai: "OpenAI",
 }
 
