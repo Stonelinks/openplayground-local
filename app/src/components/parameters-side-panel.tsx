@@ -20,18 +20,8 @@ import {
 } from "./ui/tooltip"
 import { ParametersContext, ModelsContext, ModelsStateContext } from "../app"
 import { BarChart2, Copy, Trash2, Filter } from "lucide-react"
-import {handleSelectModel} from "../lib/utils"
+import { MODEL_PROVIDERS, handleSelectModel } from "../lib/utils"
 
-const modelProviders = {
-  forefront: "Forefront",
-  "llama-local": "Llama (Local)",
-  "huggingface-local": "Hugging Face (Local)",
-  huggingface: "Hugging Face",
-  "aleph-alpha": "Aleph Alpha",
-  anthropic: "Anthropic",
-  cohere: "co:here",
-  openai: "OpenAI",
-}
 
 const ParametersSidePanel = ({ showModelDropdown, showModelList }) => {
   const { isLg } = useBreakpoint("lg")
@@ -480,7 +470,7 @@ const ParametersSidePanel = ({ showModelDropdown, showModelList }) => {
                 }
               }}
             >
-              {Object.entries(modelProviders).map(([provider, prettyName]) => (
+              {Object.entries(MODEL_PROVIDERS).map(([provider, prettyName]) => (
                 <SelectGroup key={provider}>
                   {Object.entries(modelsContext)
                     .filter(([key]) => key.split(":")[0] === provider)

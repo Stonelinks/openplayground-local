@@ -8,6 +8,7 @@ import { Checkbox } from "../components/ui/checkbox"
 import { APIContext } from "../app"
 import { useBreakpoint } from "../hooks/use-breakpoint"
 import { useToast } from "../hooks/ui/use-toast"
+import { MODEL_PROVIDERS } from "../lib/utils"
 
 interface Provider {
   name: string;
@@ -306,7 +307,7 @@ export default function Settings() {
   const [providers, setProviders] = React.useState<{[key: string]: Provider}>({});
 
   const [provider, setProvider] = React.useState<Provider | {}>({})
-  const [providerName, setProviderName] = React.useState<string>("openai")
+  const [providerName, setProviderName] = React.useState<string>(Object.keys(MODEL_PROVIDERS)[0])
   const [providerSearchURL, setProviderSearchURL] = React.useState<any>(null)
   const [providerAPIKey, setProviderAPIKey] = React.useState<string>("")
   const [providerRequiresAPIKey, setProviderRequiresAPIKey] = React.useState<boolean>(true)
