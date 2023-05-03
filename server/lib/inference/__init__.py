@@ -17,6 +17,11 @@ from dataclasses import dataclass
 from typing import Callable, Union
 from .huggingface.hf import HFInference
 from llama_cpp import Llama
+import aiohttp
+import llama_cpp
+import llama_cpp.client.models as llama_cpp_models
+import asyncio
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -646,6 +651,172 @@ class InferenceManager:
 
     def local_text_generation_llama(self, provider_details: ProviderDetails, inference_request: InferenceRequest):
        self.__error_handler__(self.__local_text_generation_llama__, provider_details, inference_request)
+    
+    def __local_text_generation_llama_cpp_web__(self, provider_details: ProviderDetails, inference_request: InferenceRequest):
+        cancelled = False
+
+        # Completion (streaming, currently can't use client)
+        async def do_inference():
+            async with aiohttp.ClientSession() as session:
+                body = llama_cpp_models.CreateCompletionRequest(
+                    # The prompt to generate completions for.
+                    # :ivar prompt:
+                    # :vartype prompt: str
+                    prompt=inference_request.prompt,
+                    
+                    # A suffix to append to the generated text. If None, no suffix is appended. Useful for chatbots.
+                    # :ivar suffix:
+                    # :vartype suffix: str
+                    suffix=None,
+                    
+                    # The maximum number of tokens to generate.
+                    # :ivar max_tokens:
+                    # :vartype max_tokens: int
+                    max_tokens=int(inference_request.model_parameters['maximumLength']),
+                    
+                    # Adjust the randomness of the generated text.
+                    # Temperature is a hyperparameter that controls the randomness of the generated text. It affects
+                    # the probability distribution of the model's output tokens. A higher temperature (e.g., 1.5)
+                    # makes the output more random and creative, while a lower temperature (e.g., 0.5) makes the
+                    # output more focused, deterministic, and conservative. The default value is 0.8, which provides
+                    # a balance between randomness and determinism. At the extreme, a temperature of 0 will always
+                    # pick the most likely next token, leading to identical outputs in each run.
+                    # :ivar temperature:
+                    # :vartype temperature: float
+                    temperature=float(inference_request.model_parameters['temperature']),
+                    
+                    # Limit the next token selection to a subset of tokens with a cumulative probability above a threshold P.
+                    # Top-p sampling, also known as nucleus sampling, is another text generation method that selects
+                    # the next token from a subset of tokens that together have a cumulative probability of at least
+                    # p. This method provides a balance between diversity and quality by considering both the
+                    # probabilities of tokens and the number of tokens to sample from. A higher value for top_p
+                    # (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more
+                    # focused and conservative text.
+                    # :ivar top_p:
+                    # :vartype top_p: float
+                    top_p=float(inference_request.model_parameters['topP']),
+                    
+                    # Whether to echo the prompt in the generated text. Useful for chatbots.
+                    # :ivar echo:
+                    # :vartype echo: bool
+                    echo=False,
+                    
+                    # A list of tokens at which to stop generation. If None, no stop tokens are used.
+                    # :ivar stop:
+                    # :vartype stop: list[str]
+                    stop=inference_request.model_parameters['stopSequences'],
+                    
+                    # Whether to stream the results as they are generated. Useful for chatbots.
+                    # :ivar stream:
+                    # :vartype stream: bool
+                    stream=True,
+                    
+                    # The number of logprobs to generate. If None, no logprobs are generated.
+                    # :ivar logprobs:
+                    # :vartype logprobs: int
+                    logprobs=None,
+                    
+                    # The model to use for generating completions. Required.
+                    # :ivar model:
+                    # :vartype model: str
+                    model=inference_request.model_name,
+                    
+                    # Limit the next token selection to the K most probable tokens.
+                    # Top-k sampling is a text generation method that selects the next token only from the top k
+                    # most likely tokens predicted by the model. It helps reduce the risk of generating
+                    # low-probability or nonsensical tokens, but it may also limit the diversity of the output. A
+                    # higher value for top_k (e.g., 100) will consider more tokens and lead to more diverse text,
+                    # while a lower value (e.g., 10) will focus on the most probable tokens and generate more
+                    # conservative text.
+                    # :ivar top_k:
+                    # :vartype top_k: int
+                    top_k=int(inference_request.model_parameters['topK']),
+                    
+                    # A penalty applied to each token that is already generated. This helps prevent the model from repeating itself.
+                    # Repeat penalty is a hyperparameter used to penalize the repetition of token sequences during
+                    # text generation. It helps prevent the model from generating repetitive or monotonous text. A
+                    # higher value (e.g., 1.5) will penalize repetitions more strongly, while a lower value (e.g.,
+                    # 0.9) will be more lenient.
+                    # :ivar repeat_penalty:
+                    # :vartype repeat_penalty: float
+                    repeat_penalty=float(inference_request.model_parameters['repetitionPenalty']),
+                )
+
+                json_dict = body.serialize()
+
+                # These are undocumented parameters only supported by our llm server implementation
+                # "contextSize": {"value": 2048, "range": [0, 2048]},
+                if "contextSize" in inference_request.model_parameters:
+                    json_dict["n_ctx"] = int(inference_request.model_parameters['contextSize'])
+                # "batchSize": {"value": 48, "range": [0, 2048]},
+                if "batchSize" in inference_request.model_parameters:
+                    json_dict["n_batch"] = int(inference_request.model_parameters['batchSize'])
+                # "threads": {"value": 1, "range": [0, os.cpu_count()]},
+                if "threads" in inference_request.model_parameters:
+                    json_dict["n_threads"] = int(inference_request.model_parameters['threads'])
+                # "f16kv": {"value": False, "range": [False, True]},
+                if "f16kv" in inference_request.model_parameters:
+                    json_dict["f16_kv"] = bool(inference_request.model_parameters['f16kv'])
+                # "useMlock": {"value": False, "range": [False, True]},
+                if "useMlock" in inference_request.model_parameters:
+                    json_dict["use_mlock"] = bool(inference_request.model_parameters['useMlock'])
+                # "useMmap": {"value": True, "range": [False, True]},
+                if "useMmap" in inference_request.model_parameters:
+                    json_dict["use_mmap"] = bool(inference_request.model_parameters['useMmap'])
+
+                LLAMA_SERVER_PORT = os.environ.get("LLAMA_SERVER_PORT", 8000)
+                LLAMA_SERVER_BASE_URL = os.environ.get("LLAMA_SERVER_BASE_URL", "http://localhost:{port}".format(port=LLAMA_SERVER_PORT))
+
+                async with session.post(
+                    f"{LLAMA_SERVER_BASE_URL}/v1/completions", json=json_dict
+                ) as response:
+                    async for line in response.content:
+
+                        # This sure seems like the wrong way to do this...
+                        line = line.decode("utf-8")
+                        if line.startswith("data: "):
+                            chunk_str = line[len("data: ") :].strip()
+                            
+                            if chunk_str == "":
+                                continue
+                            elif chunk_str == "[DONE]":
+                                print("")
+                                break
+                            elif not chunk_str.startswith("{"):
+                                logger.info(f"Received non-json chunk: {chunk_str}")
+                            else:
+                                chunk_json = json.loads(chunk_str)
+                                chunk = llama_cpp.CompletionChunk(**chunk_json)
+                                text = chunk["choices"][0]["text"]
+                                infer_response = InferenceResult(
+                                    uuid=inference_request.uuid,
+                                    model_name=inference_request.model_name,
+                                    model_tag=inference_request.model_tag,
+                                    model_provider=inference_request.model_provider,
+                                    token=text,
+                                    probability=None,
+                                    top_n_distribution=None
+                                )
+                                if not self.announcer.announce(infer_response, event="infer"):
+                                    cancelled = True
+                                    logger.info(f"Cancelled inference for {inference_request.uuid} - {inference_request.model_name}")
+
+
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError as e:
+            if str(e).startswith('There is no current event loop in thread'):
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            else:
+                raise
+
+        # loop = asyncio.get_event_loop()
+        loop.run_until_complete(do_inference())
+        
+
+    def local_text_generation_llama_cpp_web(self, provider_details: ProviderDetails, inference_request: InferenceRequest):
+       self.__error_handler__(self.__local_text_generation_llama_cpp_web__, provider_details, inference_request)
     
     def __anthropic_text_generation__(self, provider_details: ProviderDetails, inference_request: InferenceRequest):
         c = anthropic.Client(provider_details.api_key)

@@ -59,6 +59,11 @@ const ParametersSidePanel = ({ showModelDropdown, showModelList }) => {
   
   const generate_parameters_sliders = () => {
     return [
+
+    // The maximum number of tokens to generate.
+    // :ivar max_tokens:
+    // :vartype max_tokens: int
+    // "maximumLength": {"value": 200, "range": [50, 2048]},
       {
         title: "Maximum Length",
         name: "maximumLength",
@@ -72,6 +77,17 @@ const ParametersSidePanel = ({ showModelDropdown, showModelList }) => {
         ),
         normalizeFn: (value) => parseInt(value),
       },
+
+    // Adjust the randomness of the generated text.
+    // Temperature is a hyperparameter that controls the randomness of the generated text. It affects
+    // the probability distribution of the model's output tokens. A higher temperature (e.g., 1.5)
+    // makes the output more random and creative, while a lower temperature (e.g., 0.5) makes the
+    // output more focused, deterministic, and conservative. The default value is 0.8, which provides
+    // a balance between randomness and determinism. At the extreme, a temperature of 0 will always
+    // pick the most likely next token, leading to identical outputs in each run.
+    // :ivar temperature:
+    // :vartype temperature: float
+    // "temperature": {"value": 1, "range": [0.0, 2]},
       {
         title: "Temperature",
         name: "temperature",
@@ -83,10 +99,28 @@ const ParametersSidePanel = ({ showModelDropdown, showModelList }) => {
             generation. Lower <br />
             temperatures mean less random generations.
             <br />
+            <br />
+            Temperature is a hyperparameter that controls the randomness of the generated text. It affects <br />
+            the probability distribution of the model's output tokens. A higher temperature (e.g., 1.5) <br />
+            makes the output more random and creative, while a lower temperature (e.g., 0.5) makes the <br />
+            output more focused, deterministic, and conservative. The default value is 0.8, which provides <br />
+            a balance between randomness and determinism. At the extreme, a temperature of 0 will always <br />
+            pick the most likely next token, leading to identical outputs in each run. <br />
           </p>
         ),
         normalizeFn: (value) => parseFloat(value),
       },
+
+    // Limit the next token selection to a subset of tokens with a cumulative probability above a threshold P.
+    // Top-p sampling, also known as nucleus sampling, is another text generation method that selects
+    // the next token from a subset of tokens that together have a cumulative probability of at least
+    // p. This method provides a balance between diversity and quality by considering both the
+    // probabilities of tokens and the number of tokens to sample from. A higher value for top_p
+    // (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more
+    // focused and conservative text.
+    // :ivar top_p:
+    // :vartype top_p: float
+    // "topP": {"value": 1, "range": [0.0, 1]},
       {
         title: "Top P",
         name: "topP",
@@ -98,10 +132,29 @@ const ParametersSidePanel = ({ showModelDropdown, showModelList }) => {
             probable tokens with probabilities <br /> that add up to top_p or
             higher are kept for
             <br /> generation. <br />
+
+          Limit the next token selection to a subset of tokens with a cumulative probability above a threshold P. <br />
+          Top-p sampling, also known as nucleus sampling, is another text generation method that selects <br />
+          the next token from a subset of tokens that together have a cumulative probability of at least <br />
+          p. This method provides a balance between diversity and quality by considering both the <br />
+          probabilities of tokens and the number of tokens to sample from. A higher value for top_p <br />
+          (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more <br />
+          focused and conservative text. <br />
           </p>
         ),
         normalizeFn: (value) => parseFloat(value),
       },
+
+    // Limit the next token selection to the K most probable tokens.
+    // Top-k sampling is a text generation method that selects the next token only from the top k
+    // most likely tokens predicted by the model. It helps reduce the risk of generating
+    // low-probability or nonsensical tokens, but it may also limit the diversity of the output. A
+    // higher value for top_k (e.g., 100) will consider more tokens and lead to more diverse text,
+    // while a lower value (e.g., 10) will focus on the most probable tokens and generate more
+    // conservative text.
+    // :ivar top_k:
+    // :vartype top_k: int
+    // "topK": {"value": 0, "range": [0, 100]},
       {
         title: "Top K",
         name: "topK",
@@ -120,6 +173,130 @@ const ParametersSidePanel = ({ showModelDropdown, showModelList }) => {
         ),
         normalizeFn: (value) => parseInt(value),
       },
+      
+    // A penalty applied to each token that is already generated. This helps prevent the model from repeating itself.
+    // Repeat penalty is a hyperparameter used to penalize the repetition of token sequences during
+    // text generation. It helps prevent the model from generating repetitive or monotonous text. A
+    // higher value (e.g., 1.5) will penalize repetitions more strongly, while a lower value (e.g.,
+    // 0.9) will be more lenient.
+    // :ivar repeat_penalty:
+    // :vartype repeat_penalty: float
+    // "repetitionPenalty": {"value": 1, "range": [0, 2]},
+      {
+        title: "Repetition Penalty",
+        name: "repetitionPenalty",
+        type: "number",
+        step: 0.01,
+        tooltipContent: (
+          <p>
+            Akin to presence penalty. The repetition penalty is meant <br /> to
+            avoid sentences that repeat themselves without <br /> anything
+            really interesting.{" "}
+          </p>
+        ),
+        normalizeFn: (value) => parseFloat(value),
+      },
+
+    // These are undocumented parameters only supported by our llm server implementation
+    // "contextSize": {"value": 2048, "range": [0, 2048]},
+      {
+        title: "Context Size",
+        name: "contextSize",
+        type: "number",
+        step: 1,
+        tooltipContent: (
+          <p>
+            The size of the context window for the model. <br />
+            For LLama models this can't be larger than 2048. <br />
+          </p>
+        ),
+        normalizeFn: (value) => parseInt(value),
+      },
+
+    // "batchSize": {"value": 48, "range": [0, 2048]},
+      {
+        title: "Batch Size",
+        name: "batchSize",
+        type: "number",
+        step: 1,
+        tooltipContent: (
+          <p>
+            The batch size for the model. <br />
+            If using GPU (e.g. cublas) this should be large (like 512). <br />
+            If using CPU this should be small (like 8-100). <br />
+          </p>
+        ),
+        normalizeFn: (value) => parseInt(value),
+      },
+
+
+    // "threads": {
+    //     # "value": max((os.cpu_count() or 2) // 2, 1),
+    //     # "range": [0, os.cpu_count()],
+    // },
+      {
+          
+        title: "Threads",
+        name: "threads",
+        type: "number",
+        step: 1,
+        tooltipContent: (
+          <p>
+            The number of threads to use for the model inference server. <br />
+            This should be set to the number of CPU cores available. <br />
+            If doing multiple concurrent inferences, you could end up with <br />
+            more threads than cores, this will likely slow down inference. <br />
+          </p>
+        ),
+        normalizeFn: (value) => parseInt(value),
+      },
+
+
+    // "f16kv": {"value": False, "range": [False, True]},
+      {
+        title: "F16KV",
+        name: "f16kv",
+        type: "boolean",
+        tooltipContent: (
+          <p>
+            Whether to use 16-bit keys and values for the model. <br />
+            This will reduce the memory usage of the model, but <br />
+            may reduce the quality of the generated text. <br />
+          </p>
+        ),
+        normalizeFn: (value) => value === "true",
+      },
+    // "useMlock": {"value": False, "range": [False, True]},
+      {
+        title: "Use Mlock",   
+        name: "useMlock",
+        type: "boolean",
+        tooltipContent: (
+          <p>
+            Whether to use mlock to lock the model in memory. <br />
+            The inference server could fail to start if the model <br />
+            is too large to fit in memory. <br />
+          </p>
+        ),
+        normalizeFn: (value) => value === "true",
+      },
+
+    // "useMmap": {"value": True, "range": [False, True]},
+      {
+        title: "Use Mmap",
+        name: "useMmap",
+        type: "boolean",
+        tooltipContent: (
+          <p>
+            Whether to use mmap to map the model into memory. <br />
+            I honestly have no idea what this does but seems good. <br />
+          </p>
+        ),
+        normalizeFn: (value) => value === "true",
+      },
+
+      // -------------------------
+
       {
         title: "Frequency Penalty",
         name: "frequencyPenalty",
@@ -155,20 +332,7 @@ const ParametersSidePanel = ({ showModelDropdown, showModelList }) => {
         ),
         normalizeFn: (value) => parseFloat(value),
       },
-      {
-        title: "Repetition Penalty",
-        name: "repetitionPenalty",
-        type: "number",
-        step: 0.01,
-        tooltipContent: (
-          <p>
-            Akin to presence penalty. The repetition penalty is meant <br /> to
-            avoid sentences that repeat themselves without <br /> anything
-            really interesting.{" "}
-          </p>
-        ),
-        normalizeFn: (value) => parseFloat(value),
-      },
+
     ]
       .filter((parameter) => parameter.name in models_shared_keys)
       .map((parameter) => ({
@@ -449,7 +613,14 @@ const ParametersSidePanel = ({ showModelDropdown, showModelList }) => {
                 frequencyPenalty: modelParameters.frequencyPenalty || parametersContext.frequencyPenalty,
                 presencePenalty: modelParameters.presencePenalty || parametersContext.presencePenalty,
                 repetitionPenalty: modelParameters.repetitionPenalty || parametersContext.repetitionPenalty,
-                stopSequences: modelParameters.stopSequences || parametersContext.stopSequences
+                stopSequences: modelParameters.stopSequences || parametersContext.stopSequences,
+
+                contextSize: modelParameters.contextSize || parametersContext.contextSize,
+                batchSize: modelParameters.batchSize || parametersContext.batchSize,
+                threads: modelParameters.threads || parametersContext.threads,
+                f16kv: modelParameters.f16kv || parametersContext.f16kv,
+                useMlock: modelParameters.useMlock || parametersContext.useMlock,
+                useMmap: modelParameters.useMmap || parametersContext.useMmap,
               })
             }}
           >

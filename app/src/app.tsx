@@ -23,7 +23,14 @@ const DEFAULT_PARAMETERS_STATE = {
   presencePenalty: 0.0,
   stopSequences: [],
   highlightModels: true,
-  showProbabilities: false
+  showProbabilities: false,
+
+  contextSize: 2048,
+  batchSize: 64,
+  threads: 8,
+  f16kv: false,
+  useMlock: false,
+  useMmap: true,
 }
 
 const DEFAULT_EDITOR_STATE = {

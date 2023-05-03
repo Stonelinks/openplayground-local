@@ -21,7 +21,15 @@ export function handleSelectModel(modelState, modelsStateContext, setModelsState
       frequencyPenalty: parameters.frequencyPenalty?.value || parametersContext.frequencyPenalty,
       presencePenalty: parameters.presencePenalty?.value || parametersContext.presencePenalty,
       repetitionPenalty: parameters.repetitionPenalty?.value || parametersContext.repetitionPenalty,
-      stopSequences: parameters.stopSequences?.value || parametersContext.stopSequences
+      stopSequences: parameters.stopSequences?.value || parametersContext.stopSequences,
+
+
+      contextSize: parameters.contextSize?.value || parametersContext.contextSize,
+      batchSize: parameters.batchSize?.value || parametersContext.batchSize,
+      threads: parameters.threads?.value || parametersContext.threads,
+      f16kv: parameters.f16kv?.value || parametersContext.f16kv,
+      useMlock: parameters.useMlock?.value || parametersContext.useMlock,
+      useMmap: parameters.useMmap?.value || parametersContext.useMmap,
     })
   }
 
@@ -39,7 +47,8 @@ export function handleSelectModel(modelState, modelsStateContext, setModelsState
 
 export const MODEL_PROVIDERS = {
   // forefront: "Forefront",
-  "llama-local": "Llama (Local)",
+  // "llama-local": "Llama (Local)",
+  "llama-cpp-web": "Llama (llama-cpp-webserver)",
   // "huggingface-local": "Hugging Face (Local)",
   // huggingface: "Hugging Face",
   // "aleph-alpha": "Aleph Alpha",
